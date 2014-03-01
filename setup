@@ -1,0 +1,86 @@
+#!/bin/bash
+#Setups our project after cloning the repo
+function nodeIsInstalled(){
+    echo "Checking if Node.js"
+    nodecheck=$(which node)
+    if [[ "${nodecheck}" == "" ]] ; then
+        return $FALSE
+    fi
+    return $TRUE
+}
+
+function bowerIsInstalled(){
+    echo "Checking if bower is installed"
+    bowercheck=$(which bower)
+    if [[ "${bowercheck}" == "" ]] ; then
+        return $FALSE
+    fi
+    return $TRUE
+}
+
+function bundlerIsInstalled(){
+    echo "Checking if bundler gem is installed"
+    bundlercheck=$(which bundler)
+    if [[ "${bundlercheck}" == "" ]] ; then
+        return $FALSE
+    fi
+    return $TRUE
+}
+
+function updateNodeModules(){
+    if ( nodeIsInstalled )
+    then
+        echo "Updating Node Packages"
+        npm install -g mocha-phantomjs
+        npm install -g phantomjs
+    else
+        echo "Node not installed"
+        exit 2
+    fi
+}
+
+function updateBowerModules(){
+    if ( bowerIsInstalled )
+    then
+        echo "Update Bower Components"
+    else
+        echo "No Bower"
+        npm install -g bower
+    fi
+
+    bower install
+}
+
+function updateSubmodules(){
+    echo "Updating git submodules"
+
+    git submodule update --init
+}
+
+function installGems(){
+    if ( bundlerIsInstalled )
+    then
+        echo "Updating Gems"
+    else
+        gem install bundler
+    fi
+    bundle install
+}
+
+function projectSpecificInitialization(){
+    echo "Running Project Specific init"
+    echo "add precommit hook"
+    touch .git/hooks/pre-commit
+    printf "#!/bin/sh\ngrunt test-cli" > .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit
+}
+
+
+
+updateNodeModules &&
+updateBowerModules &&
+updateSubmodules &&
+installGems &&
+projectSpecificInitialization &&
+exit $?
+
